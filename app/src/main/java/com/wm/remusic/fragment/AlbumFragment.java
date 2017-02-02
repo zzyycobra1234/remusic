@@ -63,7 +63,7 @@ public class AlbumFragment extends BaseFragment {
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mPreferences = PreferencesUtility.getInstance(getActivity());
+        mPreferences = PreferencesUtility.getInstance(mContext);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class AlbumFragment extends BaseFragment {
         View view = inflater.inflate(R.layout.recylerview, container, false);
         isAZSort = mPreferences.getAlbumSortOrder().equals(SortOrder.AlbumSortOrder.ALBUM_A_Z);
         recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
-        layoutManager = new LinearLayoutManager(getActivity());
+        layoutManager = new LinearLayoutManager(mContext);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setHasFixedSize(true);
         mAdapter = new AlbumAdapter(null);
@@ -141,7 +141,7 @@ public class AlbumFragment extends BaseFragment {
 
     //设置分割线
     private void setItemDecoration() {
-        itemDecoration = new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST);
+        itemDecoration = new DividerItemDecoration(mContext, DividerItemDecoration.VERTICAL_LIST);
         recyclerView.addItemDecoration(itemDecoration);
     }
 
@@ -152,7 +152,7 @@ public class AlbumFragment extends BaseFragment {
             protected Void doInBackground(final Void... unused) {
                 isAZSort = mPreferences.getAlbumSortOrder().equals(SortOrder.AlbumSortOrder.ALBUM_A_Z);
                 Log.e("sort", isAZSort + "");
-                List<AlbumInfo> albumList = MusicUtils.queryAlbums(getContext());
+                List<AlbumInfo> albumList = MusicUtils.queryAlbums(mContext);
                 if (isAZSort) {
                     Collections.sort(albumList, new AlbumComparator());
                     for (int i = 0; i < albumList.size(); i++) {
@@ -182,16 +182,16 @@ public class AlbumFragment extends BaseFragment {
 
         @Override
         protected String doInBackground(String... params) {
-            if (getActivity() != null)
+            if (mContext != null)
                 mAdapter = new AlbumAdapter(mAlbumList);
-            mAlbumList = MusicUtils.queryAlbums(getContext());
+            mAlbumList = MusicUtils.queryAlbums(mContext);
             return "Executed";
         }
 
         @Override
         protected void onPostExecute(String result) {
             recyclerView.setAdapter(mAdapter);
-            if (getActivity() != null) {
+            if (mContext != null) {
                 setItemDecoration();
             }
         }
@@ -284,9 +284,9 @@ public class AlbumFragment extends BaseFragment {
 
             @Override
             public void onClick(View v) {
-                FragmentTransaction transaction = ((AppCompatActivity) getContext()).getSupportFragmentManager().beginTransaction();
+                FragmentTransaction transaction = ((AppCompatActivity) mContext).getSupportFragmentManager().beginTransaction();
                 AlbumDetailFragment fragment = AlbumDetailFragment.newInstance(mList.get(getAdapterPosition()).album_id, false, null);
-                transaction.hide(((AppCompatActivity) getContext()).getSupportFragmentManager().findFragmentById(R.id.tab_container));
+                transaction.hide(((AppCompatActivity) mContext).getSupportFragmentManager().findFragmentById(R.id.tab_container));
                 transaction.add(R.id.tab_container, fragment);
                 transaction.addToBackStack(null).commit();
             }

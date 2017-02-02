@@ -3,6 +3,7 @@ package com.wm.remusic.fragment;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -27,7 +28,7 @@ import java.util.List;
 /**
  * Created by wm on 2016/1/17.
  */
-public class TabPagerFragment extends Fragment {
+public class TabPagerFragment extends AttachDialogFragment {
     //PreferencesUtility mPreferences;
     private ViewPager viewPager;
     private int page = 0;
@@ -54,7 +55,7 @@ public class TabPagerFragment extends Fragment {
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // mPreferences = PreferencesUtility.getInstance(getActivity());
+        // mPreferences = PreferencesUtility.getInstance(mContext);
         if (getArguments() != null) {
             page = getArguments().getInt("page_number");
             title = getArguments().getStringArray("title");
@@ -67,16 +68,16 @@ public class TabPagerFragment extends Fragment {
                 R.layout.fragment_tab, container, false);
 
         Toolbar toolbar = (Toolbar) rootView.findViewById(R.id.toolbar);
-        ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
-        toolbar.setPadding(0, CommonUtils.getStatusHeight(getActivity()), 0, 0);
+        ((AppCompatActivity) mContext).setSupportActionBar(toolbar);
+        toolbar.setPadding(0, CommonUtils.getStatusHeight(mContext), 0, 0);
 
-        ab = ((AppCompatActivity) getActivity()).getSupportActionBar();
+        ab = ((AppCompatActivity) mContext).getSupportActionBar();
         ab.setHomeAsUpIndicator(R.drawable.actionbar_back);
         ab.setDisplayHomeAsUpEnabled(true);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getActivity().onBackPressed();
+                mContext.onBackPressed();
             }
         });
         ImageView search = (ImageView) rootView.findViewById(R.id.bar_search);
@@ -84,9 +85,9 @@ public class TabPagerFragment extends Fragment {
         search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final Intent intent = new Intent(getContext(), LocalSearchActivity.class);
+                final Intent intent = new Intent(mContext, LocalSearchActivity.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                getActivity().startActivity(intent);
+                mContext.startActivity(intent);
             }
         });
 
@@ -99,12 +100,12 @@ public class TabPagerFragment extends Fragment {
 
         final TabLayout tabLayout = (TabLayout) rootView.findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(viewPager);
-        tabLayout.setTabTextColors(R.color.text_color, ThemeUtils.getThemeColorStateList(getActivity(), R.color.theme_color_primary).getDefaultColor());
-//        tabLayout.setTabTextColors(ThemeUtils.getThemeColorStateList(getActivity(),R.color.theme_color_primary));
+        tabLayout.setTabTextColors(R.color.text_color, ThemeUtils.getThemeColorStateList(mContext, R.color.theme_color_primary).getDefaultColor());
+//        tabLayout.setTabTextColors(ThemeUtils.getThemeColorStateList(mContext,R.color.theme_color_primary));
 //                try {
 //            Field mField = TableLayout.class.getDeclaredField("mTabTextColors");
 //            mField.setAccessible(true);
-//            mField.set(tabLayout,ThemeUtils.getThemeColorStateList(getActivity(),R.color.theme_color_primary));
+//            mField.set(tabLayout,ThemeUtils.getThemeColorStateList(mContext,R.color.theme_color_primary));
 //        } catch (NoSuchFieldException e) {
 //            e.printStackTrace();
 //        } catch (IllegalArgumentException e) {
@@ -113,7 +114,7 @@ public class TabPagerFragment extends Fragment {
 //            e.printStackTrace();
 //        }
 
-        tabLayout.setSelectedTabIndicatorColor(ThemeUtils.getThemeColorStateList(getActivity(), R.color.theme_color_primary).getDefaultColor());
+        tabLayout.setSelectedTabIndicatorColor(ThemeUtils.getThemeColorStateList(mContext, R.color.theme_color_primary).getDefaultColor());
 
 
         return rootView;
@@ -165,7 +166,10 @@ public class TabPagerFragment extends Fragment {
 
         @Override
         public Fragment getItem(int position) {
-            return mFragments.get(position);
+            if (mFragments.size() > position)
+                return mFragments.get(position);
+
+            return null;
         }
 
         @Override
@@ -176,6 +180,11 @@ public class TabPagerFragment extends Fragment {
         @Override
         public CharSequence getPageTitle(int position) {
             return mFragmentTitles.get(position);
+        }
+
+        @Override
+        public void restoreState(Parcelable state, ClassLoader loader) {
+            // don't super !
         }
     }
 }

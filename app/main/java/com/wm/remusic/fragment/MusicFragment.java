@@ -42,7 +42,6 @@ import java.util.HashMap;
  * Created by wm on 2016/1/19.
  */
 public class MusicFragment extends BaseFragment {
-    private int currentlyPlayingPosition = 0;
     private Adapter mAdapter;
     private ArrayList<MusicInfo> musicInfos;
     private RecyclerView recyclerView;
@@ -60,18 +59,19 @@ public class MusicFragment extends BaseFragment {
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
-            if (view == null) {
-                view = LayoutInflater.from(getActivity()).inflate(R.layout.recylerview, frameLayout, false);
+            //setUservisibleHint 可能先与attach
+            if (view == null && mContext != null) {
+                view = LayoutInflater.from(mContext).inflate(R.layout.recylerview, frameLayout, false);
 
                 dialogText = (TextView) view.findViewById(R.id.dialog_text);
                 recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
-                layoutManager = new LinearLayoutManager(getActivity());
+                layoutManager = new LinearLayoutManager(mContext);
                 recyclerView.setLayoutManager(layoutManager);
                 mAdapter = new Adapter(null);
                 recyclerView.setAdapter(mAdapter);
                 recyclerView.setHasFixedSize(true);
                 //fastScroller = (FastScroller) view.findViewById(R.id.fastscroller);
-                recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
+                recyclerView.addItemDecoration(new DividerItemDecoration(mContext, DividerItemDecoration.VERTICAL_LIST));
 
                 sideBar = (SideBar) view.findViewById(R.id.sidebar);
                 sideBar.setOnTouchingLetterChangedListener(new SideBar.OnTouchingLetterChangedListener() {
@@ -79,11 +79,8 @@ public class MusicFragment extends BaseFragment {
                     public void onTouchingLetterChanged(String s) {
                         dialogText.setText(s);
                         sideBar.setView(dialogText);
-                        Log.e("scrol", "  " + s);
-                        Log.e("scrol", positionMap.toString());
                         if (positionMap.get(s) != null) {
                             int i = positionMap.get(s);
-                            Log.e("scrolget", "  " + i);
                             ((LinearLayoutManager) recyclerView.getLayoutManager()).scrollToPositionWithOffset(i + 1, 0);
                         }
 
@@ -107,15 +104,14 @@ public class MusicFragment extends BaseFragment {
     @Override
     public void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mPreferences = PreferencesUtility.getInstance(getActivity());
+        mPreferences = PreferencesUtility.getInstance(mContext);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.load_framelayout, container, false);
-        Log.e("musicfrag","oncreateview");
         frameLayout = (FrameLayout) view.findViewById(R.id.loadframe);
-        View loadView = LayoutInflater.from(getActivity()).inflate(R.layout.loading, frameLayout, false);
+        View loadView = LayoutInflater.from(mContext).inflate(R.layout.loading, frameLayout, false);
         frameLayout.addView(loadView);
         isFirstLoad = true;
         isAZSort = mPreferences.getSongSortOrder().equals(SortOrder.SongSortOrder.SONG_A_Z);
@@ -134,7 +130,7 @@ public class MusicFragment extends BaseFragment {
             @Override
             protected Void doInBackground(final Void... unused) {
                 isAZSort = mPreferences.getSongSortOrder().equals(SortOrder.SongSortOrder.SONG_A_Z);
-                ArrayList<MusicInfo> songList = (ArrayList) MusicUtils.queryMusic(getActivity(), IConstants.START_FROM_LOCAL);
+                ArrayList<MusicInfo> songList = (ArrayList) MusicUtils.queryMusic(mContext, IConstants.START_FROM_LOCAL);
                 // 名称排序时，重新排序并加入位置信息
                 if (isAZSort) {
                     Collections.sort(songList, new MusicComparator());
@@ -159,8 +155,6 @@ public class MusicFragment extends BaseFragment {
 
                 if (isFirstLoad) {
                     frameLayout.removeAllViews();
-                    Log.e("framelayout", frameLayout.toString());
-
                     //framelayout 创建了新的实例
                     ViewGroup p = (ViewGroup) view.getParent();
                     if (p != null) {
@@ -214,8 +208,8 @@ public class MusicFragment extends BaseFragment {
 
         @Override
         protected String doInBackground(String... params) {
-            if (getActivity() != null) {
-                musicInfos = (ArrayList<MusicInfo>) MusicUtils.queryMusic(getActivity(), IConstants.START_FROM_LOCAL);
+            if (mContext != null) {
+                musicInfos = (ArrayList<MusicInfo>) MusicUtils.queryMusic(mContext, IConstants.START_FROM_LOCAL);
 
                 for (int i = 0; i < musicInfos.size(); i++) {
                     char c = Pinyin.toPinyin(musicInfos.get(i).musicName.charAt(0)).charAt(0);
@@ -230,8 +224,8 @@ public class MusicFragment extends BaseFragment {
         @Override
         protected void onPostExecute(String result) {
             recyclerView.setAdapter(mAdapter);
-            if (getActivity() != null)
-                recyclerView.addItemDecoration(new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST));
+            if (mContext != null)
+                recyclerView.addItemDecoration(new DividerItemDecoration(mContext, DividerItemDecoration.VERTICAL_LIST));
 
         }
 
@@ -253,7 +247,7 @@ public class MusicFragment extends BaseFragment {
 //            if (list == null) {
 //                throw new IllegalArgumentException("model Data must not be null");
 //            }
-            handler = HandlerUtil.getInstance(getContext());
+            handler = HandlerUtil.getInstance(mContext);
             mList = list;
 
         }
@@ -297,7 +291,6 @@ public class MusicFragment extends BaseFragment {
                     ((ListItemViewHolder) holder).playState.setVisibility(View.VISIBLE);
                     ((ListItemViewHolder) holder).playState.setImageResource(R.drawable.song_play_icon);
                     ((ListItemViewHolder) holder).playState.setImageTintList(R.color.theme_color_primary);
-                    currentlyPlayingPosition = position;
                 } else {
                     ((ListItemViewHolder) holder).playState.setVisibility(View.GONE);
                 }
@@ -308,10 +301,10 @@ public class MusicFragment extends BaseFragment {
                 ((CommonItemViewHolder) holder).select.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent intent = new Intent(getActivity(), SelectActivity.class);
+                        Intent intent = new Intent(mContext, SelectActivity.class);
                         intent.putParcelableArrayListExtra("ids", mList);
                         intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
-                        getActivity().startActivity(intent);
+                        mContext.startActivity(intent);
                     }
                 });
 
@@ -339,7 +332,7 @@ public class MusicFragment extends BaseFragment {
                 //// TODO: 2016/1/20
                 if(playMusic != null)
                     handler.removeCallbacks(playMusic);
-                if(getAdapterPosition() > 0){
+                if(getAdapterPosition() > -1){
                     playMusic = new PlayMusic(0);
                     handler.postDelayed(playMusic,70);
                 }
@@ -394,7 +387,7 @@ public class MusicFragment extends BaseFragment {
             public void onClick(View v) {
                 if(playMusic != null)
                     handler.removeCallbacks(playMusic);
-                if(getAdapterPosition() > 0){
+                if(getAdapterPosition() > -1){
                     playMusic = new PlayMusic(getAdapterPosition() - 1);
                     handler.postDelayed(playMusic,70);
                 }
@@ -435,7 +428,7 @@ public class MusicFragment extends BaseFragment {
                     info.albumData = MusicUtils.getAlbumArtUri(info.albumId) + "";
                     infos.put(list[i], mList.get(i));
                 }
-                if (position > 0)
+                if (position > -1)
                     MusicPlayer.playAll(infos, list, position, false);
             }
         }

@@ -269,7 +269,9 @@ public class HttpUtil {
             Response response = mOkHttpClient.newCall(request).execute();
             if (response.isSuccessful()) {
                 String c = response.body().string();
-                Log.e("HttpUtil", c);
+//                FileOutputStream fileOutputStream = new FileOutputStream("/sdcard/" + System.currentTimeMillis() + ".txt");
+//                fileOutputStream.write(c.getBytes());
+//                fileOutputStream.close();
                 JsonParser parser = new JsonParser();
                 JsonElement el = parser.parse(c);
                 return el.getAsJsonObject();

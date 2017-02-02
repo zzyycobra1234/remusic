@@ -57,6 +57,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.accessibility.AccessibilityEvent;
+import android.view.animation.Animation;
 import android.view.animation.Interpolator;
 import android.widget.Scroller;
 
@@ -98,12 +99,12 @@ import java.util.List;
  */
 public class RoundViewPager extends ViewGroup {
     private static final String TAG = "ViewPager";
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     private static final boolean USE_CACHE = false;
 
     private static final int DEFAULT_OFFSCREEN_PAGES = 1;
-    private static final int MAX_SETTLE_DURATION = 600; // ms
+    private static final int MAX_SETTLE_DURATION = 1000; // ms
     private static final int MIN_DISTANCE_FOR_FLING = 25; // dips
 
     private static final int DEFAULT_GUTTER_SIZE = 16; // dips
@@ -163,7 +164,7 @@ public class RoundViewPager extends ViewGroup {
     private int mTopPageBounds;
     private int mBottomPageBounds;
 
-    // Offsets of the first and last items, if known.
+    // Offsets of the first and lastPosition items, if known.
     // Set during population, used to determine if we are at the beginning
     // or end of the pager data set during touch scrolling.
     private float mFirstOffset = -Float.MAX_VALUE;
@@ -184,7 +185,7 @@ public class RoundViewPager extends ViewGroup {
     private int mGutterSize;
     private int mTouchSlop;
     /**
-     * Position of the last motion event.
+     * Position of the lastPosition motion event.
      */
     private float mLastMotionX;
     private float mLastMotionY;
@@ -196,7 +197,7 @@ public class RoundViewPager extends ViewGroup {
      */
     private int mActivePointerId = INVALID_POINTER;
     /**
-     * Sentinel value for no current active pointer.
+     * Sentinel value for no currentPosition active pointer.
      * Used by {@link #mActivePointerId}.
      */
     private static final int INVALID_POINTER = -1;
@@ -241,7 +242,7 @@ public class RoundViewPager extends ViewGroup {
     private static final ViewPositionComparator sPositionComparator = new ViewPositionComparator();
 
     /**
-     * Indicates that the pager is in an idle, settled state. The current page
+     * Indicates that the pager is in an idle, settled state. The currentPosition page
      * is fully in view and no animation is in progress.
      */
     public static final int SCROLL_STATE_IDLE = 0;
@@ -263,7 +264,7 @@ public class RoundViewPager extends ViewGroup {
         }
     };
 
-    private int mScrollState = SCROLL_STATE_IDLE;
+    public int mScrollState = SCROLL_STATE_IDLE;
 
     /**
      * Callback interface for responding to changing state of the selected page.
@@ -271,7 +272,7 @@ public class RoundViewPager extends ViewGroup {
     public interface OnPageChangeListener {
 
         /**
-         * This method will be invoked when the current page is scrolled, either as part
+         * This method will be invoked when the currentPosition page is scrolled, either as part
          * of a programmatically initiated smooth scroll or a user initiated touch scroll.
          *
          * @param position Position index of the first page currently being displayed.
@@ -291,7 +292,7 @@ public class RoundViewPager extends ViewGroup {
 
         /**
          * Called when the scroll state changes. Useful for discovering when the user
-         * begins dragging, when the pager is automatically settling to the current page,
+         * begins dragging, when the pager is automatically settling to the currentPosition page,
          * or when it is fully stopped/idle.
          *
          * @param state The new scroll state.
@@ -338,7 +339,7 @@ public class RoundViewPager extends ViewGroup {
          * Apply a property transformation to the given page.
          *
          * @param page Apply the transformation to this page
-         * @param position Position of page relative to the current front-and-center
+         * @param position Position of page relative to the currentPosition front-and-center
          *                 position of the pager. 0 is front and center. 1 is one full
          *                 page position to the right, and -1 is one page position to the left.
          */
@@ -376,11 +377,28 @@ public class RoundViewPager extends ViewGroup {
     }
 
     private OnAnimationChange mAnimationChange;
+    public boolean isRotating = false;
 
     public void setAnimationChange(OnAnimationChange change){
         mAnimationChange = change;
     }
+    public  View getCurrentView(){
+        return mCurrentView;
+    }
+    public void setAnimation(Animation animation){
+        if(mCurrentView == null){
+            Log.e("round","mcview == null" + mItems.size());
+            mCurrentView =  (View) getChildAt(0);
 
+            Log.e("round","mcview == " + (mCurrentView == null));
+        }
+        if(mCurrentView != null){
+            Log.e("round","set");
+            mCurrentView.startAnimation(animation);
+            isRotating = true;
+            Log.e("round","set" +mCurrentView.getAnimation().hasStarted());
+        }
+    }
 
     void initViewPager() {
         setWillNotDraw(false);
@@ -457,7 +475,7 @@ public class RoundViewPager extends ViewGroup {
                                 res.left, res.top, res.right, res.bottom);
                     }
                 });
-
+        isRotating = false;
     }
 
 
@@ -482,7 +500,18 @@ public class RoundViewPager extends ViewGroup {
             enableLayers(newState != SCROLL_STATE_IDLE);
         }
         dispatchOnScrollStateChanged(newState);
+        if(newState == SCROLL_STATE_IDLE){
+            Log.e("playactivity","currentPosition = " + currentPosition);
+            if(lastPosition == currentPosition){
+                mAnimationChange.onReStart();
+            }else if(lastPosition != currentPosition){
+                mAnimationChange.onStart(mCurrentView);
+                lastPosition = currentPosition;
+            }
+
+        }
     }
+    public int lastPosition, currentPosition;
 
     /**
      * Set a PagerAdapter that will supply views for this pager as needed.
@@ -547,7 +576,7 @@ public class RoundViewPager extends ViewGroup {
     }
 
     /**
-     * Retrieve the current adapter supplying pages.
+     * Retrieve the currentPosition adapter supplying pages.
      *
      * @return The currently registered PagerAdapter
      */
@@ -565,8 +594,8 @@ public class RoundViewPager extends ViewGroup {
 
     /**
      * Set the currently selected page. If the ViewPager has already been through its first
-     * layout with its current adapter there will be a smooth animated transition between
-     * the current item and the specified item.
+     * layout with its currentPosition adapter there will be a smooth animated transition between
+     * the currentPosition item and the specified item.
      *
      * @param item Item index to select
      */
@@ -612,7 +641,7 @@ public class RoundViewPager extends ViewGroup {
         final int pageLimit = mOffscreenPageLimit;
         if (item > (mCurItem + pageLimit) || item < (mCurItem - pageLimit)) {
             // We are doing a jump by more than one page.  To avoid
-            // glitches, we want to keep all current pages in the view
+            // glitches, we want to keep all currentPosition pages in the view
             // until the scroll ends.
             for (int i=0; i<mItems.size(); i++) {
                 mItems.get(i).scrolling = true;
@@ -650,8 +679,10 @@ public class RoundViewPager extends ViewGroup {
                 if(mCurrentView != null)
                 mCurrentView.clearAnimation();
                 mCurrentView = (View) curInfo.object;
-                if(mAnimationChange != null)
-                    mAnimationChange.onStart(mCurrentView);
+                currentPosition++;
+                isRotating = false;
+//                if(mAnimationChange != null)
+//                    mAnimationChange.onStart(mCurrentView);
             }
         } else {
             if (dispatchSelected) {
@@ -659,13 +690,15 @@ public class RoundViewPager extends ViewGroup {
                 if(mCurrentView != null)
                 mCurrentView.clearAnimation();
                 mCurrentView = (View) curInfo.object;
+                currentPosition++;
+                isRotating = false;
             }
             completeScroll(false);
             scrollTo(destX, 0);
             pageScrolled(destX);
             if(dispatchSelected){
-                if(mAnimationChange != null)
-                    mAnimationChange.onStart(mCurrentView);
+//                if(mAnimationChange != null)
+//                    mAnimationChange.onStart(mCurrentView);
             }
         }
 
@@ -733,7 +766,7 @@ public class RoundViewPager extends ViewGroup {
      * As a result, setting a PageTransformer prior to Android 3.0 (API 11) will have no effect.</p>
      *
      * @param reverseDrawingOrder true if the supplied PageTransformer requires page views
-     *                            to be drawn from last to first instead of first to last.
+     *                            to be drawn from lastPosition to first instead of first to lastPosition.
      * @param transformer PageTransformer that will modify each page's animation properties
      */
     public void setPageTransformer(boolean reverseDrawingOrder, PageTransformer transformer) {
@@ -790,7 +823,7 @@ public class RoundViewPager extends ViewGroup {
 
     /**
      * Returns the number of pages that will be retained to either side of the
-     * current page in the view hierarchy in an idle state. Defaults to 1.
+     * currentPosition page in the view hierarchy in an idle state. Defaults to 1.
      *
      * @return How many pages will be kept offscreen on either side
      * @see #setOffscreenPageLimit(int)
@@ -801,7 +834,7 @@ public class RoundViewPager extends ViewGroup {
 
     /**
      * Set the number of pages that should be retained to either side of the
-     * current page in the view hierarchy in an idle state. Pages beyond this
+     * currentPosition page in the view hierarchy in an idle state. Pages beyond this
      * limit will be recreated from the adapter when needed.
      *
      * <p>This is offered as an optimization. If you know in advance the number
@@ -930,9 +963,9 @@ public class RoundViewPager extends ViewGroup {
             // We're in the middle of a previously initiated scrolling. Check to see
             // whether that scrolling has actually started (if we always call getStartX
             // we can get a stale value from the scroller if it hadn't yet had its first
-            // computeScrollOffset call) to decide what is the current scrolling position.
+            // computeScrollOffset call) to decide what is the currentPosition scrolling position.
             sx = mIsScrollStarted ? mScroller.getCurrX() : mScroller.getStartX();
-            // And abort the current scrolling.
+            // And abort the currentPosition scrolling.
             mScroller.abortAnimation();
             setScrollingCacheEnabled(false);
         } else {
@@ -967,7 +1000,7 @@ public class RoundViewPager extends ViewGroup {
             duration = (int) ((pageDelta + 1) * 100);
         }
         duration = Math.min(duration, MAX_SETTLE_DURATION);
-
+        duration = 600;
         // Reset the "scroll started" flag. It will be flipped to true in all places
         // where we call computeScrollOffset().
         mIsScrollStarted = false;
@@ -1019,7 +1052,7 @@ public class RoundViewPager extends ViewGroup {
                 needPopulate = true;
 
                 if (mCurItem == ii.position) {
-                    // Keep the current item in the valid range
+                    // Keep the currentPosition item in the valid range
                     newCurrItem = Math.max(0, Math.min(mCurItem, adapterCount - 1));
                     needPopulate = true;
                 }
@@ -1028,7 +1061,7 @@ public class RoundViewPager extends ViewGroup {
 
             if (ii.position != newPos) {
                 if (ii.position == mCurItem) {
-                    // Our current item changed position. Follow it.
+                    // Our currentPosition item changed position. Follow it.
                     newCurrItem = newPos;
                 }
 
@@ -1131,7 +1164,7 @@ public class RoundViewPager extends ViewGroup {
 
         // Fill 3x the available width or up to the number of offscreen
         // pages requested to either side, whichever is larger.
-        // If we have no current item we have no work to do.
+        // If we have no currentPosition item we have no work to do.
         if (curItem != null) {
             float extraWidthLeft = 0.f;
             int itemIndex = curIndex - 1;
@@ -1214,7 +1247,7 @@ public class RoundViewPager extends ViewGroup {
 
         mAdapter.finishUpdate(this);
 
-        // Check width measurement of current pages and drawing sort order.
+        // Check width measurement of currentPosition pages and drawing sort order.
         // Update LayoutParams as needed.
         final int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
@@ -1801,7 +1834,7 @@ public class RoundViewPager extends ViewGroup {
     }
 
     /**
-     * This method will be invoked when the current page is scrolled, either as part
+     * This method will be invoked when the currentPosition page is scrolled, either as part
      * of a programmatically initiated smooth scroll or a user initiated touch scroll.
      * If you override this method you must call through to the superclass implementation
      * (e.g. super.onPageScrolled(position, offset, offsetPixels)) before onPageScrolled
@@ -2111,9 +2144,11 @@ public class RoundViewPager extends ViewGroup {
          */
         return mIsBeingDragged;
     }
-  long time;
+    boolean isSingleTouch = false;
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
+
+
         if (mFakeDragging) {
             // A fake drag is in progress already, ignore this real one
             // but still eat the touch events.
@@ -2139,12 +2174,14 @@ public class RoundViewPager extends ViewGroup {
 
         final int action = ev.getAction();
         boolean needsInvalidate = false;
+        Log.e("round","onevent");
 
         switch (action & MotionEventCompat.ACTION_MASK) {
+
             case MotionEvent.ACTION_DOWN: {
-                if(mAnimationChange !=null){
-                    mAnimationChange.onPause();
-                }
+                Log.e("round","ondown");
+                isSingleTouch = true;
+
 
                 mScroller.abortAnimation();
                 mPopulatePending = false;
@@ -2157,6 +2194,7 @@ public class RoundViewPager extends ViewGroup {
                 break;
             }
             case MotionEvent.ACTION_MOVE:
+                Log.e("round","onmove");
                 if (!mIsBeingDragged) {
                     final int pointerIndex = MotionEventCompat.findPointerIndex(ev, mActivePointerId);
                     if (pointerIndex == -1) {
@@ -2168,9 +2206,17 @@ public class RoundViewPager extends ViewGroup {
                     final float xDiff = Math.abs(x - mLastMotionX);
                     final float y = MotionEventCompat.getY(ev, pointerIndex);
                     final float yDiff = Math.abs(y - mLastMotionY);
+
                     if (DEBUG) Log.v(TAG, "Moved x to " + x + "," + y + " diff=" + xDiff + "," + yDiff);
                     if (xDiff > mTouchSlop && xDiff > yDiff) {
                         if (DEBUG) Log.v(TAG, "Starting drag!");
+
+
+                        isSingleTouch = false;
+                        if(mAnimationChange !=null){
+                            mAnimationChange.onPause();
+                        }
+
                         mIsBeingDragged = true;
                         requestParentDisallowInterceptTouchEvent(true);
                         mLastMotionX = x - mInitialMotionX > 0 ? mInitialMotionX + mTouchSlop :
@@ -2219,9 +2265,10 @@ public class RoundViewPager extends ViewGroup {
 
                     needsInvalidate = resetTouch();
                 }
-                if(mAnimationChange != null){
-                    mAnimationChange.onReStart();
-                }
+                Log.e("round","onup" + isSingleTouch);
+//                if(mAnimationChange != null && isSingleTouch){
+//                    mAnimationChange.onReStart();
+//        }
                 break;
             case MotionEvent.ACTION_CANCEL:
                 if (mIsBeingDragged) {
@@ -2311,7 +2358,7 @@ public class RoundViewPager extends ViewGroup {
     }
 
     /**
-     * @return Info about the page at the current scroll position.
+     * @return Info about the page at the currentPosition scroll position.
      *         This can be synthetic for a missing middle page; the 'object' field can be null.
      */
     private ItemInfo infoForCurrentScrollPosition() {
@@ -2750,7 +2797,7 @@ public class RoundViewPager extends ViewGroup {
                     sb.append(" => ").append(parent.getClass().getSimpleName());
                 }
                 Log.e(TAG, "arrowScroll tried to find focus based on non-child " +
-                        "current focused view " + sb.toString());
+                        "currentPosition focused view " + sb.toString());
                 currentFocused = null;
             }
         }
@@ -2837,7 +2884,7 @@ public class RoundViewPager extends ViewGroup {
     }
 
     /**
-     * We only want the current page that is being shown to be focusable.
+     * We only want the currentPosition page that is being shown to be focusable.
      */
     @Override
     public void addFocusables(ArrayList<View> views, int direction, int focusableMode) {
@@ -2881,7 +2928,7 @@ public class RoundViewPager extends ViewGroup {
     }
 
     /**
-     * We only want the current page that is being shown to be touchable.
+     * We only want the currentPosition page that is being shown to be touchable.
      */
     @Override
     public void addTouchables(ArrayList<View> views) {
@@ -2900,7 +2947,7 @@ public class RoundViewPager extends ViewGroup {
     }
 
     /**
-     * We only want the current page that is being shown to be focusable.
+     * We only want the currentPosition page that is being shown to be focusable.
      */
     @Override
     protected boolean onRequestFocusInDescendants(int direction,
@@ -2939,7 +2986,7 @@ public class RoundViewPager extends ViewGroup {
             return super.dispatchPopulateAccessibilityEvent(event);
         }
 
-        // Dispatch all other accessibility events from the current page.
+        // Dispatch all other accessibility events from the currentPosition page.
         final int childCount = getChildCount();
         for (int i = 0; i < childCount; i++) {
             final View child = getChildAt(i);

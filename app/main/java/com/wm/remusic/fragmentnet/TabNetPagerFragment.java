@@ -7,12 +7,14 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.bilibili.magicasakura.utils.ThemeUtils;
 import com.wm.remusic.R;
+import com.wm.remusic.fragment.AttachFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +22,13 @@ import java.util.List;
 /**
  * Created by wm on 2016/4/11.
  */
-public class TabNetPagerFragment extends Fragment implements ChangeView {
+public class TabNetPagerFragment extends AttachFragment implements ChangeView {
     //PreferencesUtility mPreferences;
     private ViewPager viewPager;
     private int page = 0;
     private ActionBar ab;
     private String[] title;
+    private boolean isFirstLoad = true;
 
     public static final TabNetPagerFragment newInstance(int page, String[] title) {
         TabNetPagerFragment f = new TabNetPagerFragment();
@@ -61,26 +64,32 @@ public class TabNetPagerFragment extends Fragment implements ChangeView {
         }
 
         final TabLayout tabLayout = (TabLayout) rootView.findViewById(R.id.tabs);
-        tabLayout.setTabTextColors(R.color.text_color, ThemeUtils.getThemeColorStateList(getActivity(), R.color.theme_color_primary).getDefaultColor());
-        tabLayout.setSelectedTabIndicatorColor(ThemeUtils.getThemeColorStateList(getActivity(), R.color.theme_color_primary).getDefaultColor());
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                tabLayout.setupWithViewPager(viewPager);
-            }
-        }).start();
+        tabLayout.setTabTextColors(R.color.text_color, ThemeUtils.getThemeColorStateList(mContext, R.color.theme_color_primary).getDefaultColor());
+        tabLayout.setSelectedTabIndicatorColor(ThemeUtils.getThemeColorStateList(mContext, R.color.theme_color_primary).getDefaultColor());
+        tabLayout.setupWithViewPager(viewPager);
 
 
         return rootView;
 
     }
 
-
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        if(recommendFragment == null){
+            return;
+        }
+        if(isVisibleToUser && isFirstLoad){
+            recommendFragment.requestData();
+            isFirstLoad = false;
+        }
+    }
+    RecommendFragment recommendFragment;
     private void setupViewPager(ViewPager viewPager) {
         Adapter adapter = new Adapter(getChildFragmentManager());
-        RecommendFragment fragment = new RecommendFragment();
-        fragment.setChanger(this);
-        adapter.addFragment(fragment, "新曲");
+        recommendFragment = new RecommendFragment();
+        recommendFragment.setChanger(this);
+        adapter.addFragment(recommendFragment, "新曲");
         adapter.addFragment(new AllPlaylistFragment(), "歌单");
         //  adapter.addFragment(new NetFragment(), "主播电台");
         adapter.addFragment(new RankingFragment(), "排行榜");

@@ -30,6 +30,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.wm.remusic.R;
 import com.wm.remusic.activity.PlaylistActivity;
+import com.wm.remusic.fragment.AttachFragment;
 import com.wm.remusic.json.GedanInfo;
 import com.wm.remusic.net.BMA;
 import com.wm.remusic.net.HttpUtil;
@@ -39,7 +40,7 @@ import java.util.ArrayList;
 /**
  * Created by wm on 2016/5/15.
  */
-public class AllPlaylistFragment extends Fragment {
+public class AllPlaylistFragment extends AttachFragment {
 
     FrameLayout frameLayout;
     View view;
@@ -56,7 +57,7 @@ public class AllPlaylistFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.load_framelayout, container, false);
         frameLayout = (FrameLayout) view.findViewById(R.id.loadframe);
-        View loadView = LayoutInflater.from(getActivity()).inflate(R.layout.loading, frameLayout, false);
+        View loadView = LayoutInflater.from(mContext).inflate(R.layout.loading, frameLayout, false);
         frameLayout.addView(loadView);
         return view;
     }
@@ -66,9 +67,9 @@ public class AllPlaylistFragment extends Fragment {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
             if (view == null) {
-                view = LayoutInflater.from(getActivity()).inflate(R.layout.recommend_all_playlist, frameLayout, false);
+                view = LayoutInflater.from(mContext).inflate(R.layout.recommend_all_playlist, frameLayout, false);
                 recyclerView = (RecyclerView) view.findViewById(R.id.recommend_playlist_recyclerview);
-                gridLayoutManager = new GridLayoutManager(getActivity(), 2);
+                gridLayoutManager = new GridLayoutManager(mContext, 2);
                 recyclerView.setLayoutManager(gridLayoutManager);
                 recyclerView.setHasFixedSize(true);
 
@@ -184,7 +185,7 @@ public class AllPlaylistFragment extends Fragment {
             mList = list;
 
             Bitmap b = BitmapFactory.decodeResource(getResources(), R.mipmap.index_icn_earphone);
-            ImageSpan imgSpan = new ImageSpan(getActivity(), b, ImageSpan.ALIGN_BASELINE);
+            ImageSpan imgSpan = new ImageSpan(mContext, b, ImageSpan.ALIGN_BASELINE);
             spanString = new SpannableString("icon");
             spanString.setSpan(imgSpan, 0, 4, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
@@ -245,14 +246,14 @@ public class AllPlaylistFragment extends Fragment {
                 ((ItemView) holder).itemView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Intent intent = new Intent(getActivity(), PlaylistActivity.class);
+                        Intent intent = new Intent(mContext, PlaylistActivity.class);
                         intent.putExtra("playlistid", info.getListid());
                         intent.putExtra("islocal", false);
                         intent.putExtra("albumart", info.getPic_300());
                         intent.putExtra("playlistname", info.getTitle());
                         intent.putExtra("playlistDetail", info.getTag());
                         intent.putExtra("playlistcount", info.getListenum());
-                        getActivity().startActivity(intent);
+                        mContext.startActivity(intent);
                     }
                 });
             }

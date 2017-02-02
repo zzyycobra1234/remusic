@@ -80,8 +80,9 @@ public class ArtistDetailActivity extends BaseActivity implements ObservableScro
     private int mBaseTranslationY;
     private ViewPager mPager;
     private NavigationAdapter mPagerAdapter;
-    TabLayout tabLayout;
+    private TabLayout tabLayout;
     private ImageView toolbar_bac;
+    private LoadNetPlaylistInfo mLoadNetList;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -151,7 +152,8 @@ public class ArtistDetailActivity extends BaseActivity implements ObservableScro
             tryAgain.setVisibility(View.GONE);
             loadView = LayoutInflater.from(this).inflate(R.layout.loading, loadFrameLayout, false);
             loadFrameLayout.addView(loadView);
-            new LoadNetPlaylistInfo().execute();
+            mLoadNetList = new LoadNetPlaylistInfo();
+            mLoadNetList.execute();
 
         } else {
             tryAgain.setVisibility(View.VISIBLE);
@@ -208,7 +210,7 @@ public class ArtistDetailActivity extends BaseActivity implements ObservableScro
                     return true;
                 }
 
-            } catch (NullPointerException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 
@@ -232,6 +234,11 @@ public class ArtistDetailActivity extends BaseActivity implements ObservableScro
             }
 
         }
+
+        public void cancleTask(){
+            cancel(true);
+            RequestThreadPool.finish();
+        }
     }
 
 
@@ -250,7 +257,9 @@ public class ArtistDetailActivity extends BaseActivity implements ObservableScro
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        RequestThreadPool.finish();
+        if(mLoadNetList != null){
+            mLoadNetList.cancleTask();
+        }
     }
 
     ArtistInfo artistInfo;

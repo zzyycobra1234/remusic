@@ -26,6 +26,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.bilibili.magicasakura.widgets.TintImageView;
 import com.facebook.common.executors.CallerThreadExecutor;
 import com.facebook.common.references.CloseableReference;
 import com.facebook.datasource.DataSource;
@@ -96,6 +97,7 @@ public class AlbumsDetailActivity extends BaseActivity implements ObservableScro
     private int mStatusSize;
     private FrameLayout headerViewContent;
     private RelativeLayout headerDetail;
+    private LoadNetPlaylistInfo mLoadNetList;
     private String TAG = "AlbumsDetailActivity";
     private boolean d = true;
 
@@ -219,7 +221,8 @@ public class AlbumsDetailActivity extends BaseActivity implements ObservableScro
             tryAgain.setVisibility(View.GONE);
             loadView = LayoutInflater.from(this).inflate(R.layout.loading, loadFrameLayout, false);
             loadFrameLayout.addView(loadView);
-            new LoadNetPlaylistInfo().execute();
+            mLoadNetList = new LoadNetPlaylistInfo();
+            mLoadNetList.execute();
 
         } else {
             tryAgain.setVisibility(View.VISIBLE);
@@ -272,7 +275,7 @@ public class AlbumsDetailActivity extends BaseActivity implements ObservableScro
                     }
                     return true;
                 }
-            } catch (NullPointerException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 
@@ -286,12 +289,16 @@ public class AlbumsDetailActivity extends BaseActivity implements ObservableScro
                 loadFrameLayout.removeAllViews();
                 tryAgain.setVisibility(View.VISIBLE);
             } else {
-                Log.e("mlist", mList.toString());
                 loadFrameLayout.removeAllViews();
                 mAdapter.updateDataSet(adapterList);
 
             }
 
+        }
+
+        public void cancleTask(){
+            cancel(true);
+            RequestThreadPool.finish();
         }
     }
 
@@ -316,7 +323,14 @@ public class AlbumsDetailActivity extends BaseActivity implements ObservableScro
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        RequestThreadPool.finish();
+        if(mLoadNetList != null){
+            mLoadNetList.cancleTask();
+        }
+    }
+
+    @Override
+    public void updateTrack() {
+        mAdapter.notifyDataSetChanged();
     }
 
 
@@ -350,7 +364,6 @@ public class AlbumsDetailActivity extends BaseActivity implements ObservableScro
                                          if (bitmap != null) {
                                              new setBlurredAlbumArt().execute(bitmap);
                                          }
-                                         ;
                                      }
 
                                      @Override
@@ -477,7 +490,17 @@ public class AlbumsDetailActivity extends BaseActivity implements ObservableScro
         public void onBindViewHolder(final RecyclerView.ViewHolder itemHolder, final int i) {
             if (itemHolder instanceof ItemViewHolder) {
                 final MusicInfo localItem = arraylist.get(i - 1);
-                ((ItemViewHolder) itemHolder).trackNumber.setText(i + "");
+                //判断该条目音乐是否在播放
+                if (MusicPlayer.getCurrentAudioId() == localItem.songId) {
+                    ((ItemViewHolder) itemHolder).trackNumber.setVisibility(View.GONE);
+                    ((ItemViewHolder) itemHolder).playState.setVisibility(View.VISIBLE);
+                    ((ItemViewHolder) itemHolder).playState.setImageResource(R.drawable.song_play_icon);
+                    ((ItemViewHolder) itemHolder).playState.setImageTintList(R.color.theme_color_primary);
+                } else {
+                    ((ItemViewHolder) itemHolder).playState.setVisibility(View.GONE);
+                    ((ItemViewHolder) itemHolder).trackNumber.setVisibility(View.VISIBLE);
+                    ((ItemViewHolder) itemHolder).trackNumber.setText(i + "");
+                }
                 ((ItemViewHolder) itemHolder).title.setText(localItem.musicName);
                 ((ItemViewHolder) itemHolder).artist.setText(localItem.artist);
                 ((ItemViewHolder) itemHolder).menu.setOnClickListener(new View.OnClickListener() {
@@ -552,7 +575,7 @@ public class AlbumsDetailActivity extends BaseActivity implements ObservableScro
                             infos.put(list[i], info);
                         }
 
-                        if (getAdapterPosition() > 0)
+                        if (getAdapterPosition() > -1)
                             MusicPlayer.playAll(infos, list, 0, false);
                     }
                 }, 70);
@@ -564,6 +587,7 @@ public class AlbumsDetailActivity extends BaseActivity implements ObservableScro
         public class ItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
             protected TextView title, artist, trackNumber;
             protected ImageView menu;
+            TintImageView playState;
 
             public ItemViewHolder(View view) {
                 super(view);
@@ -571,6 +595,7 @@ public class AlbumsDetailActivity extends BaseActivity implements ObservableScro
                 this.artist = (TextView) view.findViewById(R.id.song_artist);
                 this.trackNumber = (TextView) view.findViewById(R.id.trackNumber);
                 this.menu = (ImageView) view.findViewById(R.id.popup_menu);
+                this.playState = (TintImageView) view.findViewById(R.id.play_state);
                 view.setOnClickListener(this);
             }
 

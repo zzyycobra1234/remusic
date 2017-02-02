@@ -1,5 +1,6 @@
 package com.wm.remusic.fragment;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
@@ -8,6 +9,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.TextView;
 
+import com.wm.remusic.MainApplication;
 import com.wm.remusic.R;
 import com.wm.remusic.uitl.PreferencesUtility;
 
@@ -17,6 +19,7 @@ import com.wm.remusic.uitl.PreferencesUtility;
 public class BitSetFragment extends DialogFragment implements View.OnClickListener {
 
     private TextView bit1, bit2, bit3, bit256, bit320;
+    private Context mContext;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -35,7 +38,8 @@ public class BitSetFragment extends DialogFragment implements View.OnClickListen
         bit3.setOnClickListener(this);
         bit256.setOnClickListener(this);
         bit320.setOnClickListener(this);
-        switch (PreferencesUtility.getInstance(getContext()).getDownMusicBit()) {
+        mContext = MainApplication.context;
+        switch (PreferencesUtility.getInstance(mContext).getDownMusicBit()) {
             case 64:
                 // TypedValue outValue = new TypedValue();
                 //  getContext().getTheme().resolveAttribute(android.R.attr.selectableItemBackground,outValue, true);
@@ -65,23 +69,23 @@ public class BitSetFragment extends DialogFragment implements View.OnClickListen
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.timing_10min:
-                PreferencesUtility.getInstance(getContext()).setDownMusicBit(64);
+                PreferencesUtility.getInstance(mContext).setDownMusicBit(64);
                 dismiss();
                 break;
             case R.id.timing_20min:
-                PreferencesUtility.getInstance(getContext()).setDownMusicBit(128);
+                PreferencesUtility.getInstance(mContext).setDownMusicBit(128);
                 dismiss();
                 break;
             case R.id.timing_30min:
-                PreferencesUtility.getInstance(getContext()).setDownMusicBit(192);
+                PreferencesUtility.getInstance(mContext).setDownMusicBit(192);
                 dismiss();
                 break;
             case R.id.timing_45min:
-                PreferencesUtility.getInstance(getContext()).setDownMusicBit(256);
+                PreferencesUtility.getInstance(mContext).setDownMusicBit(256);
                 dismiss();
                 break;
             case R.id.timing_60min:
-                PreferencesUtility.getInstance(getContext()).setDownMusicBit(320);
+                PreferencesUtility.getInstance(mContext).setDownMusicBit(320);
                 dismiss();
                 break;
         }

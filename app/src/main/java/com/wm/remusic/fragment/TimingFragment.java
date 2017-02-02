@@ -1,7 +1,6 @@
 package com.wm.remusic.fragment;
 
 import android.os.Bundle;
-import android.support.v4.app.DialogFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +14,7 @@ import com.wm.remusic.service.MusicPlayer;
 /**
  * Created by wm on 2016/3/22.
  */
-public class TimingFragment extends DialogFragment implements View.OnClickListener {
+public class TimingFragment extends AttachDialogFragment implements View.OnClickListener {
 
     private TextView timing10, timing20, timing30, timing45, timing60, timing90;
 
@@ -48,32 +47,32 @@ public class TimingFragment extends DialogFragment implements View.OnClickListen
         switch (v.getId()) {
             case R.id.timing_10min:
                 MusicPlayer.timing(10 * 60 * 1000);
-                Toast.makeText(getContext(), "将在10分钟后停止播放", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "将在10分钟后停止播放", Toast.LENGTH_SHORT).show();
                 dismiss();
                 break;
             case R.id.timing_20min:
                 MusicPlayer.timing(20 * 60 * 1000);
-                Toast.makeText(getContext(), "将在20分钟后停止播放", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "将在20分钟后停止播放", Toast.LENGTH_SHORT).show();
                 dismiss();
                 break;
             case R.id.timing_30min:
                 MusicPlayer.timing(30 * 60 * 1000);
-                Toast.makeText(getContext(), "将在30分钟后停止播放", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "将在30分钟后停止播放", Toast.LENGTH_SHORT).show();
                 dismiss();
                 break;
             case R.id.timing_45min:
                 MusicPlayer.timing(45 * 60 * 1000);
-                Toast.makeText(getContext(), "将在45分钟后停止播放", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "将在45分钟后停止播放", Toast.LENGTH_SHORT).show();
                 dismiss();
                 break;
             case R.id.timing_60min:
                 MusicPlayer.timing(60 * 60 * 1000);
-                Toast.makeText(getContext(), "将在60分钟后停止播放", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "将在60分钟后停止播放", Toast.LENGTH_SHORT).show();
                 dismiss();
                 break;
             case R.id.timing_90min:
                 MusicPlayer.timing(90 * 60 * 1000);
-                Toast.makeText(getContext(), "将在90分钟后停止播放", Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, "将在90分钟后停止播放", Toast.LENGTH_SHORT).show();
                 dismiss();
                 break;
         }
@@ -90,8 +89,8 @@ public class TimingFragment extends DialogFragment implements View.OnClickListen
     public void onStart() {
         super.onStart();
         //设置fragment高度 、宽度
-        int dialogHeight = (int) (getActivity().getResources().getDisplayMetrics().heightPixels * 0.71);
-        int dialogWidth = (int) (getActivity().getResources().getDisplayMetrics().widthPixels * 0.79);
+        int dialogHeight = (int) (mContext.getResources().getDisplayMetrics().heightPixels * 0.71);
+        int dialogWidth = (int) (mContext.getResources().getDisplayMetrics().widthPixels * 0.79);
         getDialog().getWindow().setLayout(dialogWidth, dialogHeight);
         getDialog().setCanceledOnTouchOutside(true);
 

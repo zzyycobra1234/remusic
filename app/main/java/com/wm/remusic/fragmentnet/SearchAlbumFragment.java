@@ -16,6 +16,7 @@ import android.widget.TextView;
 import com.facebook.drawee.view.SimpleDraweeView;
 import com.wm.remusic.R;
 import com.wm.remusic.activity.AlbumsDetailActivity;
+import com.wm.remusic.fragment.AttachFragment;
 import com.wm.remusic.json.SearchAlbumInfo;
 import com.wm.remusic.widget.DividerItemDecoration;
 
@@ -25,7 +26,7 @@ import java.util.List;
 /**
  * Created by wm on 2016/5/18.
  */
-public class SearchAlbumFragment extends Fragment {
+public class SearchAlbumFragment extends AttachFragment {
 
     private LinearLayoutManager layoutManager;
     private List<SearchAlbumInfo> mAlbumList = new ArrayList<>();
@@ -47,7 +48,7 @@ public class SearchAlbumFragment extends Fragment {
         View view = inflater.inflate(R.layout.recylerview, container, false);
 
         recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
-        layoutManager = new LinearLayoutManager(getActivity());
+        layoutManager = new LinearLayoutManager(mContext);
         recyclerView.setLayoutManager(layoutManager);
         mAdapter = new AlbumAdapter(null);
         recyclerView.setAdapter(mAdapter);
@@ -60,12 +61,12 @@ public class SearchAlbumFragment extends Fragment {
 
     //设置分割线
     private void setItemDecoration() {
-        itemDecoration = new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST);
+        itemDecoration = new DividerItemDecoration(mContext, DividerItemDecoration.VERTICAL_LIST);
         recyclerView.addItemDecoration(itemDecoration);
     }
 
     private void loadAlbums() {
-        if (getActivity() == null) {
+        if (mContext == null) {
             return;
         }
         if (getArguments() != null) {
@@ -137,12 +138,12 @@ public class SearchAlbumFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 SearchAlbumInfo model = mList.get(getAdapterPosition());
-                Intent intent = new Intent(getActivity(), AlbumsDetailActivity.class);
+                Intent intent = new Intent(mContext, AlbumsDetailActivity.class);
                 intent.putExtra("albumid", model.getAlbum_id());
                 intent.putExtra("albumart", model.getPic_small());
                 intent.putExtra("albumname", model.getTitle());
                 intent.putExtra("artistname", model.getAuthor());
-                getActivity().startActivity(intent);
+                mContext.startActivity(intent);
             }
 
         }

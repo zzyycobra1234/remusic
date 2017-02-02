@@ -43,6 +43,8 @@ public class SimpleWidgetProvider extends AppWidgetProvider {
     private static long currentId = -1;
     private static long position,duration;
     private static HashMap<String, Bitmap> albumMap = new HashMap<>();   //储存专辑封面的图片
+    private static boolean isInUse;
+    private String TAG = SimpleWidgetProvider.class.getSimpleName();
 
     private PendingIntent getPendingIntent(Context context, int buttonId) {
         Intent intent = new Intent();
@@ -55,7 +57,6 @@ public class SimpleWidgetProvider extends AppWidgetProvider {
 
     // 更新所有的 widget
     private synchronized void pushUpdate(final Context context,AppWidgetManager appWidgetManager ,boolean updateProgress) {
-        Log.d("harvic", "pushupdate");
         pushAction(context,MediaService.SEND_PROGRESS);
         RemoteViews remoteView = new RemoteViews(context.getPackageName(), R.layout.simple_control_widget_layout);
         //将按钮与点击事件绑定
@@ -73,7 +74,6 @@ public class SimpleWidgetProvider extends AppWidgetProvider {
                 break;
             }
         }
-        Log.e("harvic", " isloved = " + isFav);
         if (isFav) {
             remoteView.setImageViewResource(R.id.widget_love,R.drawable.widget_unstar_selector);
         } else {
@@ -143,7 +143,7 @@ public class SimpleWidgetProvider extends AppWidgetProvider {
                                                          // You can use the bitmap in only limited ways
                                                          // No need to do any cleanup.
                                                          if (bitmap != null) {
-                                                             noBit = bitmap;
+                                                             noBit = bitmap.copy(bitmap.getConfig(),true);
                                                              albumMap.put(albumuri,noBit);
                                                          }
                                                          pushUpdate(context,AppWidgetManager.getInstance(context),false);
@@ -171,9 +171,28 @@ public class SimpleWidgetProvider extends AppWidgetProvider {
         appWidgetManager.updateAppWidget(componentName, remoteView);
     }
 
+
+    public void onEnabled(Context context) {
+        Log.e(TAG,"onenabled = " + isInUse);
+        super.onEnabled(context);
+
+        isInUse = true;
+        Log.e(TAG,"onenabled = " + isInUse);
+
+    }
+    //当最后一个该Widget删除是调用该方法，注意是最后一个
+    public void onDisabled(Context context) {
+        Log.e(TAG,"ondisable = " + isInUse);
+        super.onDisabled(context);
+        isInUse = false;
+        Log.e(TAG,"ondisable = " + isInUse);
+    }
+
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager,
             int[] appWidgetIds) {
+        Log.e(TAG,"update = " + isInUse);
+        if(isInUse)
         pushUpdate(context,appWidgetManager ,false);
 
     }
@@ -188,7 +207,16 @@ public class SimpleWidgetProvider extends AppWidgetProvider {
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
-        Log.d("harvic", "action:"+action);
+        if (AppWidgetManager.ACTION_APPWIDGET_ENABLED.equals(action)) {
+            this.onEnabled(context);
+        }
+        else if (AppWidgetManager.ACTION_APPWIDGET_DISABLED.equals(action)) {
+            this.onDisabled(context);
+        }
+        Log.e(TAG,"action = " + action);
+        if(!isInUse){
+            return;
+        }
 
         if (intent.hasCategory(Intent.CATEGORY_ALTERNATIVE)) {
             Uri data = intent.getData();

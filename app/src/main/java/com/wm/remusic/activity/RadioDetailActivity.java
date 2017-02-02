@@ -17,7 +17,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,8 +26,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.bilibili.magicasakura.widgets.TintImageView;
 import com.facebook.binaryresource.BinaryResource;
 import com.facebook.binaryresource.FileBinaryResource;
 import com.facebook.cache.common.CacheKey;
@@ -56,8 +55,6 @@ import com.wm.remusic.fragment.MoreFragment;
 import com.wm.remusic.fragment.NetMoreFragment;
 import com.wm.remusic.handler.HandlerUtil;
 import com.wm.remusic.info.MusicInfo;
-import com.wm.remusic.json.AlbumInfo;
-import com.wm.remusic.json.MusicDetailInfo;
 import com.wm.remusic.json.RadioInfo;
 import com.wm.remusic.net.BMA;
 import com.wm.remusic.net.HttpUtil;
@@ -102,6 +99,7 @@ public class RadioDetailActivity extends BaseActivity implements ObservableScrol
     private String albumListenCount;
     private FrameLayout headerViewContent;
     private RelativeLayout headerDetail;
+    private LoadNetPlaylistInfo mLoadNetList;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -235,7 +233,8 @@ public class RadioDetailActivity extends BaseActivity implements ObservableScrol
             tryAgain.setVisibility(View.GONE);
             loadView = LayoutInflater.from(this).inflate(R.layout.loading, loadFrameLayout, false);
             loadFrameLayout.addView(loadView);
-            new LoadNetPlaylistInfo().execute();
+            mLoadNetList = new LoadNetPlaylistInfo();
+            mLoadNetList.execute();
 
         } else {
             tryAgain.setVisibility(View.VISIBLE);
@@ -273,7 +272,7 @@ public class RadioDetailActivity extends BaseActivity implements ObservableScrol
                     musicInfo.albumData = albumPath;
                     adapterList.add(musicInfo);
                 }
-            } catch (NullPointerException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 
@@ -285,6 +284,7 @@ public class RadioDetailActivity extends BaseActivity implements ObservableScrol
             loadFrameLayout.removeAllViews();
             mAdapter.updateDataSet(adapterList);
         }
+
     }
 
 
@@ -298,6 +298,11 @@ public class RadioDetailActivity extends BaseActivity implements ObservableScrol
         super.onPause();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mLoadNetList.cancel(true);
+    }
 
     private void setAlbumart() {
         albumTitle.setText(albumName);
@@ -424,6 +429,11 @@ public class RadioDetailActivity extends BaseActivity implements ObservableScrol
 
     }
 
+    @Override
+    public void updateTrack() {
+        super.updateTrack();
+        mAdapter.notifyDataSetChanged();
+    }
 
     class PlaylistDetailAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         final static int FIRST_ITEM = 0;
@@ -456,7 +466,17 @@ public class RadioDetailActivity extends BaseActivity implements ObservableScrol
         public void onBindViewHolder(final RecyclerView.ViewHolder itemHolder, final int i) {
             if (itemHolder instanceof ItemViewHolder) {
                 final MusicInfo localItem = arraylist.get(i - 1);
-                ((ItemViewHolder) itemHolder).trackNumber.setText(i + "");
+                //判断该条目音乐是否在播放
+                if (MusicPlayer.getCurrentAudioId() == localItem.songId) {
+                    ((ItemViewHolder) itemHolder).trackNumber.setVisibility(View.GONE);
+                    ((ItemViewHolder) itemHolder).playState.setVisibility(View.VISIBLE);
+                    ((ItemViewHolder) itemHolder).playState.setImageResource(R.drawable.song_play_icon);
+                    ((ItemViewHolder) itemHolder).playState.setImageTintList(R.color.theme_color_primary);
+                } else {
+                    ((ItemViewHolder) itemHolder).playState.setVisibility(View.GONE);
+                    ((ItemViewHolder) itemHolder).trackNumber.setVisibility(View.VISIBLE);
+                    ((ItemViewHolder) itemHolder).trackNumber.setText(i + "");
+                }
                 ((ItemViewHolder) itemHolder).title.setText(localItem.musicName);
                 ((ItemViewHolder) itemHolder).artist.setText(artistName);
                 ((ItemViewHolder) itemHolder).menu.setOnClickListener(new View.OnClickListener() {
@@ -530,7 +550,7 @@ public class RadioDetailActivity extends BaseActivity implements ObservableScrol
                         }
                         MusicPlayer.playAll(infos, list, 0, false);
                     }
-                },70);
+                }, 70);
 
             }
 
@@ -539,6 +559,7 @@ public class RadioDetailActivity extends BaseActivity implements ObservableScrol
         public class ItemViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
             protected TextView title, artist, trackNumber;
             protected ImageView menu;
+            TintImageView playState;
 
             public ItemViewHolder(View view) {
                 super(view);
@@ -546,6 +567,7 @@ public class RadioDetailActivity extends BaseActivity implements ObservableScrol
                 this.artist = (TextView) view.findViewById(R.id.song_artist);
                 this.trackNumber = (TextView) view.findViewById(R.id.trackNumber);
                 this.menu = (ImageView) view.findViewById(R.id.popup_menu);
+                this.playState = (TintImageView) view.findViewById(R.id.play_state);
                 view.setOnClickListener(this);
             }
 
@@ -565,7 +587,7 @@ public class RadioDetailActivity extends BaseActivity implements ObservableScrol
                         if (getAdapterPosition() > 0)
                             MusicPlayer.playAll(infos, list, getAdapterPosition() - 1, false);
                     }
-                },70);
+                }, 70);
 
             }
 

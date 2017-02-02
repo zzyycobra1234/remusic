@@ -17,7 +17,7 @@ import com.wm.remusic.uitl.MusicUtils;
 /**
  * Created by wm on 2016/3/2.
  */
-public class MusicDetailFragment extends DialogFragment {
+public class MusicDetailFragment extends AttachDialogFragment {
     private TextView title, name, time, qua, size, path;
     private MusicInfo musicInfo;
 
@@ -56,7 +56,7 @@ public class MusicDetailFragment extends DialogFragment {
 
         title.setText(musicInfo.musicName);
         name.setText(musicInfo.artist + "-" + musicInfo.musicName);
-        time.setText(MusicUtils.makeShortTimeString(getActivity(), musicInfo.duration / 1000));
+        time.setText(MusicUtils.makeShortTimeString(mContext, musicInfo.duration / 1000));
 
         size.setText(musicInfo.size / 1000000 + "m");
         path.setText(musicInfo.data);
@@ -74,7 +74,7 @@ public class MusicDetailFragment extends DialogFragment {
     public void onStart() {
         super.onStart();
         //设置fragment高度 、宽度
-        int dialogHeight = (int) (getActivity().getResources().getDisplayMetrics().heightPixels * 0.30);
+        int dialogHeight = (int) (mContext.getResources().getDisplayMetrics().heightPixels * 0.30);
         getDialog().getWindow().setLayout(WindowManager.LayoutParams.MATCH_PARENT, dialogHeight);
         getDialog().setCanceledOnTouchOutside(true);
 

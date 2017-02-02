@@ -1,6 +1,7 @@
 package com.wm.remusic.fragmentnet;
 
 
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -17,6 +18,8 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.wm.remusic.R;
+import com.wm.remusic.activity.RankPlaylistActivity;
+import com.wm.remusic.fragment.AttachFragment;
 import com.wm.remusic.json.BillboardInfo;
 import com.wm.remusic.net.BMA;
 import com.wm.remusic.net.HttpUtil;
@@ -28,7 +31,7 @@ import java.util.concurrent.Executors;
 /**
  * Created by wm on 2016/5/14.
  */
-public class RankingFragment extends Fragment {
+public class RankingFragment extends AttachFragment {
 
     //新歌榜
     public static int BILLBOARD_NEW_MUSIC = 1;
@@ -52,15 +55,17 @@ public class RankingFragment extends Fragment {
     LinearLayoutManager linearLayoutManager;
     RankingAdapter rankingAdapter;
     ArrayList<BillboardInfo> items = new ArrayList<>();
+    int[] mBillList = new int[]{BILLBOARD_NEW_MUSIC, BILLBOARD_ORIGINAL, BILLBOARD_HOT_MUSIC
+    , BILLBOARD_EU_UK , BILLBOARD_KING, BILLBOARD_NET_MUSIC};
 
     @Override
     public void setUserVisibleHint(boolean isVisibleToUser) {
         super.setUserVisibleHint(isVisibleToUser);
         if (isVisibleToUser) {
             if (view == null) {
-                view = LayoutInflater.from(getActivity()).inflate(R.layout.ranking, null, false);
+                view = LayoutInflater.from(mContext).inflate(R.layout.ranking, null, false);
                 recyclerView = (RecyclerView) view.findViewById(R.id.recyclerview);
-                linearLayoutManager = new LinearLayoutManager(getActivity());
+                linearLayoutManager = new LinearLayoutManager(mContext);
                 recyclerView.setLayoutManager(linearLayoutManager);
                 rankingAdapter = new RankingAdapter();
                 recyclerView.setAdapter(rankingAdapter);
@@ -75,7 +80,7 @@ public class RankingFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.load_framelayout, container, false);
         frameLayout = (FrameLayout) view.findViewById(R.id.loadframe);
-        View loadView = LayoutInflater.from(getActivity()).inflate(R.layout.loading, frameLayout, false);
+        View loadView = LayoutInflater.from(mContext).inflate(R.layout.loading, frameLayout, false);
         frameLayout.addView(loadView);
 
         return view;
@@ -200,6 +205,17 @@ public class RankingFragment extends Fragment {
                 textView1 = (TextView) itemView.findViewById(R.id.rank_first_txt);
                 textView2 = (TextView) itemView.findViewById(R.id.rank_second_txt);
                 textView3 = (TextView) itemView.findViewById(R.id.rank_third_txt);
+                itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if(getAdapterPosition() > -1){
+                            Intent intent = new Intent(mContext, RankPlaylistActivity.class);
+                            intent.putExtra("type",mBillList[getAdapterPosition()]);
+                            intent.putExtra("pic",pic[getAdapterPosition()]);
+                            mContext.startActivity(intent);
+                        }
+                    }
+                });
             }
         }
     }

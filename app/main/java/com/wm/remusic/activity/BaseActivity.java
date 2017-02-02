@@ -59,7 +59,7 @@ public class BaseActivity extends AppCompatActivity implements ServiceConnection
     /**
      *  fragment界面刷新
      */
-    private void refreshUI() {
+    public void refreshUI() {
         for (final MusicStateListener listener : mMusicListener) {
             if (listener != null) {
                 listener.reloadAdapter();

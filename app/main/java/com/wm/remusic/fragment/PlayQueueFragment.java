@@ -1,6 +1,5 @@
 package com.wm.remusic.fragment;
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -38,7 +37,7 @@ import java.util.HashMap;
 /**
  * Created by wm on 2016/2/4.
  */
-public class PlayQueueFragment extends DialogFragment {
+public class PlayQueueFragment extends AttachDialogFragment {
 
     private RecyclerView.ItemDecoration itemDecoration;
     private PlaylistAdapter adapter;
@@ -49,16 +48,22 @@ public class PlayQueueFragment extends DialogFragment {
     private MusicPlaybackState musicPlaybackState;
     private RecyclerView recyclerView;  //弹出的activity列表
     private LinearLayoutManager layoutManager;
-    private Context mContext;
     private Handler mHandler;
+    private PlayQuueuListener mQueueListener;
+    public interface PlayQuueuListener{
+        void onPlay(int position);
+    }
+
+    public void setQueueListener(PlayQuueuListener listener){
+        mQueueListener = listener;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //设置样式
         setStyle(DialogFragment.STYLE_NO_FRAME, R.style.CustomDatePickerDialog);
-        musicPlaybackState = MusicPlaybackState.getInstance(getContext());
-        mContext = getContext();
+        musicPlaybackState = MusicPlaybackState.getInstance(mContext);
         mHandler = HandlerUtil.getInstance(mContext);
     }
 
@@ -101,11 +106,11 @@ public class PlayQueueFragment extends DialogFragment {
             public void onClick(View v) {
                 MusicPlayer.clearQueue();
                 MusicPlayer.stop();
-                File file = new File(getContext().getCacheDir().getAbsolutePath() + "playlist");
+                File file = new File(mContext.getCacheDir().getAbsolutePath() + "playlist");
                 if (file.exists()) {
                     file.delete();
                 }
-                MusicPlaybackState.getInstance(getContext()).clearQueue();
+                MusicPlaybackState.getInstance(mContext).clearQueue();
                 if (adapter != null)
                     adapter.notifyDataSetChanged();
                 dismiss();
@@ -206,7 +211,7 @@ public class PlayQueueFragment extends DialogFragment {
 
         @Override
         public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
-            return new ItemViewHolder(LayoutInflater.from(getContext()).inflate(R.layout.fragment_playqueue_item, viewGroup, false));
+            return new ItemViewHolder(LayoutInflater.from(mContext).inflate(R.layout.fragment_playqueue_item, viewGroup, false));
         }
 
         @Override
@@ -289,6 +294,10 @@ public class PlayQueueFragment extends DialogFragment {
                         long[] ids = new long[1];
                         ids[0] = playlist.get(a).songId;
                         MusicPlayer.setQueuePosition(a);
+
+                        if(mQueueListener != null)
+                        mQueueListener.onPlay(a);
+
                         notifyItemChanged(currentlyPlayingPosition);
                         notifyItemChanged(a);
                     }

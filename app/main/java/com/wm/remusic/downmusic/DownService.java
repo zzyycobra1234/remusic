@@ -254,9 +254,9 @@ public class DownService extends Service {
                     Toast.makeText(mContext, "储存卡无法创建文件", Toast.LENGTH_SHORT).show();
                     return null;
                 }
-                return file.getAbsolutePath();
+                return file.getAbsolutePath() + "/";
             }
-            return file.getAbsolutePath();
+            return file.getAbsolutePath() + "/";
         } else {
             Toast.makeText(mContext, "没有储存卡", Toast.LENGTH_SHORT).show();
             return null;
@@ -436,11 +436,12 @@ public class DownService extends Service {
 
 
         final Intent nowPlayingIntent = new Intent();
+        nowPlayingIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         nowPlayingIntent.setComponent(new ComponentName("com.wm.remusic", "com.wm.remusic.activity.DownActivity"));
-        PendingIntent clickIntent = PendingIntent.getBroadcast(this, 0, nowPlayingIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent clickIntent = PendingIntent.getActivity(this,0,nowPlayingIntent,PendingIntent.FLAG_UPDATE_CURRENT);
         remoteViews.setImageViewResource(R.id.image, R.drawable.placeholder_disk_210);
         if(complete){
-            remoteViews.setTextViewText(R.id.title, "Remusic" );
+            remoteViews.setTextViewText(R.id.title, "remusic" );
             remoteViews.setTextViewText(R.id.text, "下载完成，点击查看" );
             remoteViews.setTextViewText(R.id.time, showDate());
         }else {

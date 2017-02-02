@@ -10,7 +10,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -43,12 +42,16 @@ public class QuickControlsFragment extends BaseFragment {
         public void run() {
 
             long position = MusicPlayer.position();
-            mProgress.setMax((int) MusicPlayer.duration());
-            mProgress.setProgress((int) position);
+            long duration = MusicPlayer.duration();
+            if (duration > 0 && duration < 627080716) {
+                mProgress.setProgress((int) (1000 * position / duration));
+            }
 
             if (MusicPlayer.isPlaying()) {
                 mProgress.postDelayed(mUpdateProgress, 50);
-            } else mProgress.removeCallbacks(this);
+            } else {
+                mProgress.removeCallbacks(mUpdateProgress);
+            }
 
         }
     };
@@ -58,8 +61,7 @@ public class QuickControlsFragment extends BaseFragment {
     private SimpleDraweeView mAlbumArt;
     private View rootView;
     private ImageView playQueue, next;
-    private LinearLayout layout;
-    private boolean duetoplaypause = false;
+    private String TAG = "QuickControlsFragment";
     private static QuickControlsFragment fragment;
 
     public static QuickControlsFragment newInstance() {
@@ -79,9 +81,7 @@ public class QuickControlsFragment extends BaseFragment {
         next = (ImageView) rootView.findViewById(R.id.play_next);
         playQueue = (ImageView) rootView.findViewById(R.id.play_list);
 
-        mProgress.setMax((int) MusicPlayer.duration());
-        mProgress.setProgress((int) MusicPlayer.position());
-        mProgress.setProgressTintList(ThemeUtils.getThemeColorStateList(getContext(), R.color.theme_color_primary));
+        mProgress.setProgressTintList(ThemeUtils.getThemeColorStateList(mContext, R.color.theme_color_primary));
 
         mPlayPause.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -151,57 +151,53 @@ public class QuickControlsFragment extends BaseFragment {
     public void updateNowplayingCard() {
         mTitle.setText(MusicPlayer.getTrackName());
         mArtist.setText(MusicPlayer.getArtistName());
-        if (!duetoplaypause) {
-            ControllerListener controllerListener = new BaseControllerListener<ImageInfo>() {
-                @Override
-                public void onFinalImageSet(String id, @Nullable ImageInfo imageInfo, @Nullable Animatable anim) {
-                    if (imageInfo == null) {
-                        return;
-                    }
-                    QualityInfo qualityInfo = imageInfo.getQualityInfo();
-                    FLog.d("Final image received! " +
-                                    "Size %d x %d",
-                            "Quality level %d, good enough: %s, full quality: %s",
-                            imageInfo.getWidth(),
-                            imageInfo.getHeight(),
-                            qualityInfo.getQuality(),
-                            qualityInfo.isOfGoodEnoughQuality(),
-                            qualityInfo.isOfFullQuality());
+        ControllerListener controllerListener = new BaseControllerListener<ImageInfo>() {
+            @Override
+            public void onFinalImageSet(String id, @Nullable ImageInfo imageInfo, @Nullable Animatable anim) {
+                if (imageInfo == null) {
+                    return;
                 }
-
-                @Override
-                public void onIntermediateImageSet(String id, @Nullable ImageInfo imageInfo) {
-                    //FLog.d("Intermediate image received");
-                }
-
-                @Override
-                public void onFailure(String id, Throwable throwable) {
-                    mAlbumArt.setImageURI(Uri.parse("res:/" + R.drawable.placeholder_disk_210));
-                }
-            };
-            Uri uri = null;
-            try{
-                uri = Uri.parse(MusicPlayer.getAlbumPath());
-            }catch (Exception e){
-                e.printStackTrace();
+                QualityInfo qualityInfo = imageInfo.getQualityInfo();
+                FLog.d("Final image received! " +
+                                "Size %d x %d",
+                        "Quality level %d, good enough: %s, full quality: %s",
+                        imageInfo.getWidth(),
+                        imageInfo.getHeight(),
+                        qualityInfo.getQuality(),
+                        qualityInfo.isOfGoodEnoughQuality(),
+                        qualityInfo.isOfFullQuality());
             }
-            if (uri != null) {
-                ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uri).build();
 
-                DraweeController controller = Fresco.newDraweeControllerBuilder()
-                        .setOldController(mAlbumArt.getController())
-                        .setImageRequest(request)
-                        .setControllerListener(controllerListener)
-                        .build();
-
-                mAlbumArt.setController(controller);
-            } else {
-                mAlbumArt.setImageURI(Uri.parse("content://" + MusicPlayer.getAlbumPath()));
+            @Override
+            public void onIntermediateImageSet(String id, @Nullable ImageInfo imageInfo) {
+                //FLog.d("Intermediate image received");
             }
+
+            @Override
+            public void onFailure(String id, Throwable throwable) {
+                mAlbumArt.setImageURI(Uri.parse("res:/" + R.drawable.placeholder_disk_210));
+            }
+        };
+        Uri uri = null;
+        try {
+            uri = Uri.parse(MusicPlayer.getAlbumPath());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        duetoplaypause = false;
-        mProgress.setMax((int) MusicPlayer.duration());
-        mProgress.postDelayed(mUpdateProgress, 10);
+        if (uri != null) {
+            ImageRequest request = ImageRequestBuilder.newBuilderWithSource(uri).build();
+
+            DraweeController controller = Fresco.newDraweeControllerBuilder()
+                    .setOldController(mAlbumArt.getController())
+                    .setImageRequest(request)
+                    .setControllerListener(controllerListener)
+                    .build();
+
+            mAlbumArt.setController(controller);
+        } else {
+            mAlbumArt.setImageURI(Uri.parse("content://" + MusicPlayer.getAlbumPath()));
+        }
+
     }
 
     @Override
@@ -214,12 +210,15 @@ public class QuickControlsFragment extends BaseFragment {
     public void onStop() {
         super.onStop();
         mProgress.removeCallbacks(mUpdateProgress);
-
     }
 
     @Override
     public void onResume() {
         super.onResume();
+        mProgress.setMax(1000);
+        mProgress.removeCallbacks(mUpdateProgress);
+        mProgress.postDelayed(mUpdateProgress, 10);
+        updateNowplayingCard();
 
     }
 
@@ -233,9 +232,12 @@ public class QuickControlsFragment extends BaseFragment {
         if (MusicPlayer.isPlaying()) {
             mPlayPause.setImageResource(R.drawable.playbar_btn_pause);
             mPlayPause.setImageTintList(R.color.theme_color_primary);
+            mProgress.removeCallbacks(mUpdateProgress);
+            mProgress.postDelayed(mUpdateProgress, 50);
         } else {
             mPlayPause.setImageResource(R.drawable.playbar_btn_play);
             mPlayPause.setImageTintList(R.color.theme_color_primary);
+            mProgress.removeCallbacks(mUpdateProgress);
         }
     }
 
@@ -245,15 +247,11 @@ public class QuickControlsFragment extends BaseFragment {
         updateState();
     }
 
-    @Override
-    public void updateTime() {
-        mProgress.setMax((int) MusicPlayer.duration());
-    }
 
     @Override
     public void changeTheme() {
         super.changeTheme();
-        mProgress.setProgressTintList(ThemeUtils.getThemeColorStateList(getContext(), R.color.theme_color_primary));
+        mProgress.setProgressTintList(ThemeUtils.getThemeColorStateList(mContext, R.color.theme_color_primary));
     }
 
 

@@ -1,8 +1,5 @@
 package com.wm.remusic.activity;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
@@ -23,7 +20,6 @@ import com.wm.remusic.provider.RecentStore;
 import com.wm.remusic.recent.Song;
 import com.wm.remusic.recent.SongLoader;
 import com.wm.remusic.recent.TopTracksLoader;
-import com.wm.remusic.service.MediaService;
 import com.wm.remusic.service.MusicPlayer;
 import com.wm.remusic.uitl.CommonUtils;
 import com.wm.remusic.uitl.IConstants;
@@ -45,19 +41,10 @@ public class RecentActivity extends BaseActivity {
     private Toolbar toolbar;
     private List<Song> mList;
     private RecyclerView recyclerView;
+    private String TAG = "RecentActivity";
+    private boolean d = true;
     private LinearLayoutManager layoutManager;
     //接受歌曲播放变化和列表变化广播，刷新列表
-    private BroadcastReceiver mStatusListener = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action.equals(MediaService.META_CHANGED)) {
-                reloadAdapter();
-            } else if (action.equals(MediaService.PLAYLIST_CHANGED)) {
-                reloadAdapter();
-            }
-        }
-    };
 
     @Override
     public void onCreate(final Bundle savedInstanceState) {
@@ -95,20 +82,11 @@ public class RecentActivity extends BaseActivity {
 
 
     //刷新列表
-    private void reloadAdapter() {
-        new AsyncTask<Void, Void, Void>() {
-            @Override
-            protected Void doInBackground(final Void... unused) {
-                //List<MusicInfo> songList = MusicUtils.getMusicLists(getContext(), recentStore.getRecentIds());
-                //mAdapter.updateDataSet(songList);
-                return null;
-            }
+    public void updateTrack() {
+        if (mAdapter != null) {
+            mAdapter.updateDataSet(mList);
+        }
 
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                mAdapter.notifyDataSetChanged();
-            }
-        }.execute();
     }
 
     //异步加载recyclerview界面
@@ -152,6 +130,7 @@ public class RecentActivity extends BaseActivity {
         //更新adpter的数据
         public void updateDataSet(List<Song> list) {
             this.mList = list;
+            notifyDataSetChanged();
         }
 
         @Override
@@ -239,7 +218,7 @@ public class RecentActivity extends BaseActivity {
                         }
                         MusicPlayer.playAll(infos, list, 0, false);
                     }
-                },70);
+                }, 70);
 
             }
 

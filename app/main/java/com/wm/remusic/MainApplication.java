@@ -7,6 +7,7 @@ import android.os.Environment;
 import android.support.annotation.ColorInt;
 import android.support.annotation.ColorRes;
 import android.util.Log;
+import android.view.ViewGroup;
 
 import com.bilibili.magicasakura.utils.ThemeUtils;
 import com.facebook.cache.disk.DiskCacheConfig;
@@ -18,12 +19,16 @@ import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.google.gson.Gson;
 import com.squareup.leakcanary.LeakCanary;
 import com.squareup.leakcanary.RefWatcher;
+import com.wm.remusic.activity.MainActivity;
 import com.wm.remusic.handler.UnceHandler;
 import com.wm.remusic.permissions.Nammu;
 import com.wm.remusic.provider.PlaylistInfo;
 import com.wm.remusic.uitl.IConstants;
 import com.wm.remusic.uitl.PreferencesUtility;
 import com.wm.remusic.uitl.ThemeHelper;
+
+import net.youmi.android.normal.spot.SplashViewSettings;
+import net.youmi.android.normal.spot.SpotManager;
 
 /**
  * Created by wm on 2016/2/23.
@@ -144,11 +149,11 @@ public class MainApplication extends Application implements ThemeUtils.switchCol
     public void onCreate() {
         frescoInit();
         super.onCreate();
-        if (LeakCanary.isInAnalyzerProcess(this)) {
-            // This process is dedicated to LeakCanary for heap analysis.
-            // You should not init your app in this process.
-            return;
-        }
+//        if (LeakCanary.isInAnalyzerProcess(this)) {
+//            // This process is dedicated to LeakCanary for heap analysis.
+//            // You should not init your app in this process.
+//            return;
+//        }
 
 
         context = this;
@@ -158,8 +163,8 @@ public class MainApplication extends Application implements ThemeUtils.switchCol
         }
         ThemeUtils.setSwitchColor(this);
        // refWatcher = LeakCanary.install(this);
-        LeakCanary.install(this);
-        // initCatchException();
+       // LeakCanary.install(this);
+       //  initCatchException();
 
         if (!PreferencesUtility.getInstance(this).getFavriateMusicPlaylist()) {
             PlaylistInfo.getInstance(this).addPlaylist(favPlaylist, getResources().getString(R.string.my_fav_playlist),
@@ -167,6 +172,8 @@ public class MainApplication extends Application implements ThemeUtils.switchCol
             PreferencesUtility.getInstance(this).setFavriateMusicPlaylist(true);
         }
     }
+
+
 
     @Override
     public int replaceColorById(Context context, @ColorRes int colorId) {

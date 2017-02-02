@@ -1,7 +1,6 @@
 package com.wm.remusic.fragment;
 
 
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -50,7 +49,7 @@ import java.util.List;
 /**
  * Created by wm on 2016/1/31.
  */
-public class NetMoreFragment extends DialogFragment {
+public class NetMoreFragment extends AttachDialogFragment {
     private int type;
     private double heightPercent;
     private TextView topTitle;
@@ -64,7 +63,6 @@ public class NetMoreFragment extends DialogFragment {
     private LinearLayoutManager layoutManager;
     private String args;
     private String musicName, artist, albumId, albumName;
-    private Context mContext;
     private Handler mHandler;
 
     public static NetMoreFragment newInstance(String id, String albumId, String artistId) {
@@ -123,7 +121,7 @@ public class NetMoreFragment extends DialogFragment {
         View view = inflater.inflate(R.layout.more_fragment, container);
         topTitle = (TextView) view.findViewById(R.id.pop_list_title);
         recyclerView = (RecyclerView) view.findViewById(R.id.pop_list);
-        layoutManager = new LinearLayoutManager(getActivity());
+        layoutManager = new LinearLayoutManager(mContext);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
         getList();
@@ -134,7 +132,7 @@ public class NetMoreFragment extends DialogFragment {
 
     //设置分割线
     private void setItemDecoration() {
-        RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(getActivity(), DividerItemDecoration.VERTICAL_LIST);
+        RecyclerView.ItemDecoration itemDecoration = new DividerItemDecoration(mContext, DividerItemDecoration.VERTICAL_LIST);
         recyclerView.addItemDecoration(itemDecoration);
     }
 
@@ -148,7 +146,7 @@ public class NetMoreFragment extends DialogFragment {
         topTitle.setText("歌曲：" + " " + musicName);
         heightPercent = 0.6;
         setMusicInfo();
-        muaicflowAdapter = new MusicFlowAdapter(getActivity(), mlistInfo, adapterMusicInfo);
+        muaicflowAdapter = new MusicFlowAdapter(mContext, mlistInfo, adapterMusicInfo);
     }
 
     private void setClick() {
@@ -184,7 +182,7 @@ public class NetMoreFragment extends DialogFragment {
                         shareIntent.setAction(Intent.ACTION_SEND);
                         shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse("file://" + adapterMusicInfo.data));
                         shareIntent.setType("audio/*");
-                        getActivity().startActivity(Intent.createChooser(shareIntent, getResources().getString(R.string.shared_to)));
+                        mContext.startActivity(Intent.createChooser(shareIntent, getResources().getString(R.string.shared_to)));
                         dismiss();
                         break;
                     case 3:
@@ -310,7 +308,7 @@ public class NetMoreFragment extends DialogFragment {
 
                         } else {
 
-                            Intent intent = new Intent(getActivity(), AlbumsDetailActivity.class);
+                            Intent intent = new Intent(mContext, AlbumsDetailActivity.class);
                             intent.putExtra("albumid", adapterMusicInfo.albumId + "");
                             intent.putExtra("albumart", adapterMusicInfo.albumData);
                             intent.putExtra("albumname", adapterMusicInfo.albumName);
@@ -321,7 +319,7 @@ public class NetMoreFragment extends DialogFragment {
                         break;
                     case 6:
                         MusicDetailFragment detailFrament = MusicDetailFragment.newInstance(adapterMusicInfo);
-                        detailFrament.show(getActivity().getFragmentManager(), "detail");
+                        detailFrament.show(getActivity().getSupportFragmentManager(), "detail");
                         dismiss();
                         break;
                     default:
@@ -350,14 +348,13 @@ public class NetMoreFragment extends DialogFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setStyle(DialogFragment.STYLE_NO_FRAME, R.style.CustomDatePickerDialog);
-        mContext = getContext();
     }
 
     @Override
     public void onStart() {
         super.onStart();
         //设置fragment高度 、宽度
-        int dialogHeight = (int) (getActivity().getResources().getDisplayMetrics().heightPixels * heightPercent);
+        int dialogHeight = (int) (mContext.getResources().getDisplayMetrics().heightPixels * heightPercent);
         ;
 //        WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
 //        Display display = wm.getDefaultDisplay();

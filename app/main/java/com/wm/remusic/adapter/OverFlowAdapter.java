@@ -21,10 +21,10 @@ public class OverFlowAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolde
     private List<OverFlowItem> mList;
     private List<MusicInfo> musicInfos;
     private Context mContext;
-    private Activity activity;
+    private Context activity;
     private OnRecyclerViewItemClickListener mOnItemClickListener = null;
 
-    public OverFlowAdapter(Activity activity, List<OverFlowItem> list, List<MusicInfo> info) {
+    public OverFlowAdapter(Context activity, List<OverFlowItem> list, List<MusicInfo> info) {
         mList = list;
         musicInfos = info;
         this.activity = activity;

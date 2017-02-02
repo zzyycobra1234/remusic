@@ -19,6 +19,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.wm.remusic.MainApplication;
 import com.wm.remusic.R;
+import com.wm.remusic.fragment.AttachFragment;
 import com.wm.remusic.json.SearchAlbumInfo;
 import com.wm.remusic.json.SearchArtistInfo;
 import com.wm.remusic.json.SearchSongInfo;
@@ -32,7 +33,7 @@ import java.util.List;
 /**
  * Created by wm on 2016/4/11.
  */
-public class SearchTabPagerFragment extends Fragment {
+public class SearchTabPagerFragment extends AttachFragment {
 
     private ViewPager viewPager;
     private int page = 0;
@@ -94,10 +95,10 @@ public class SearchTabPagerFragment extends Fragment {
             @Override
             protected void onPostExecute(Void aVoid) {
                 super.onPostExecute(aVoid);
-                if (getActivity() == null) {
+                if (mContext == null) {
                     return;
                 }
-                contentView = LayoutInflater.from(getActivity()).inflate(R.layout.fragment_net_tab, frameLayout, false);
+                contentView = LayoutInflater.from(mContext).inflate(R.layout.fragment_net_tab, frameLayout, false);
                 viewPager = (ViewPager) contentView.findViewById(R.id.viewpager);
                 if (viewPager != null) {
                     Adapter adapter = new Adapter(getChildFragmentManager());
@@ -111,8 +112,8 @@ public class SearchTabPagerFragment extends Fragment {
                 TabLayout tabLayout = (TabLayout) contentView.findViewById(R.id.tabs);
                 tabLayout.setupWithViewPager(viewPager);
                 viewPager.setCurrentItem(page);
-                tabLayout.setTabTextColors(R.color.text_color, ThemeUtils.getThemeColorStateList(getActivity(), R.color.theme_color_primary).getDefaultColor());
-                tabLayout.setSelectedTabIndicatorColor(ThemeUtils.getThemeColorStateList(getActivity(), R.color.theme_color_primary).getDefaultColor());
+                tabLayout.setTabTextColors(R.color.text_color, ThemeUtils.getThemeColorStateList(mContext, R.color.theme_color_primary).getDefaultColor());
+                tabLayout.setSelectedTabIndicatorColor(ThemeUtils.getThemeColorStateList(mContext, R.color.theme_color_primary).getDefaultColor());
                 frameLayout.removeAllViews();
                 frameLayout.addView(contentView);
 
@@ -133,7 +134,7 @@ public class SearchTabPagerFragment extends Fragment {
 
         View rootView = inflater.inflate(R.layout.load_framelayout, container, false);
         frameLayout = (FrameLayout) rootView.findViewById(R.id.loadframe);
-        View loadview = LayoutInflater.from(getActivity()).inflate(R.layout.loading, frameLayout, false);
+        View loadview = LayoutInflater.from(mContext).inflate(R.layout.loading, frameLayout, false);
         frameLayout.addView(loadview);
 
 
